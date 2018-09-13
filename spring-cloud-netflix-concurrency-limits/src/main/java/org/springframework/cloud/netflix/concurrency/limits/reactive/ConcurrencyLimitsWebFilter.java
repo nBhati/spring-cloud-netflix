@@ -18,14 +18,12 @@
 package org.springframework.cloud.netflix.concurrency.limits.reactive;
 
 import com.netflix.concurrency.limits.Limiter;
-import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-
-import java.util.Optional;
 
 public class ConcurrencyLimitsWebFilter implements WebFilter {
 
@@ -37,16 +35,14 @@ public class ConcurrencyLimitsWebFilter implements WebFilter {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-		Optional<Limiter.Listener> listener = limiter.acquire(exchange);
-
-		if (!listener.isPresent()) {
-			exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-			//TODO: set body
-			return exchange.getResponse().setComplete();
-		}
-
-		return chain.filter(exchange)
-				.doOnSuccess(v -> listener.get().onSuccess())
-				.doOnError(throwable -> listener.get().onIgnore());
+		return limiter.acquire(exchange)
+				.map(listener -> chain.filter(exchange)
+						.doOnSuccess(v -> listener.onSuccess())
+						.doOnError(throwable -> listener.onIgnore()))
+				.orElseGet(() -> {
+					exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+					//TODO: set body
+					return exchange.getResponse().setComplete();
+				});
 	}
 }
