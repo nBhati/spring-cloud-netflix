@@ -31,9 +31,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.netflix.concurrency.limits.test.AbstractConcurrencyLimitsTests;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -44,8 +43,6 @@ public class ConcurrencyLimitsHandlerInterceptorTests extends AbstractConcurrenc
 
 	@LocalServerPort
 	public int port;
-
-	private WebClient client;
 
 	@Before
 	public void init() {
@@ -59,13 +56,8 @@ public class ConcurrencyLimitsHandlerInterceptorTests extends AbstractConcurrenc
 
 	@SpringBootConfiguration
 	@EnableAutoConfiguration
-	@RestController
+	@Import(HelloControllerConfiguration.class)
 	protected static class TestConfig {
-
-		@GetMapping
-		public String get() throws Exception {
-			return "Hello";
-		}
 
 		@Bean
 		public Consumer<ServletLimiterBuilder> limiterBuilderConfigurer() {

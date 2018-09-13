@@ -32,18 +32,15 @@ import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.cloud.test.ModifiedClassPathRunner;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.util.SocketUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @RunWith(ModifiedClassPathRunner.class)
 @ClassPathExclusions({"spring-boot-starter-tomcat-*", "tomcat-embed-*"})
 public class ConcurrencyLimitsWebFilterTests extends AbstractConcurrencyLimitsTests {
 
-	public int port;
-
-	private WebClient client;
+	private int port;
 
 	@Before
 	public void init() {
@@ -65,13 +62,8 @@ public class ConcurrencyLimitsWebFilterTests extends AbstractConcurrencyLimitsTe
 
 	@SpringBootConfiguration
 	@EnableAutoConfiguration
-	@RestController
+	@Import(HelloControllerConfiguration.class)
 	protected static class TestConfig {
-
-		@GetMapping
-		public String get() throws Exception {
-			return "Hello";
-		}
 
 		@Bean
 		public Consumer<ServerWebExchangeLimiterBuilder> limiterBuilderConfigurer() {

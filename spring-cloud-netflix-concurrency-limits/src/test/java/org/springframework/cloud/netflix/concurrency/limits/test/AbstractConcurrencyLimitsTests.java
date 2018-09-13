@@ -17,16 +17,22 @@
 
 package org.springframework.cloud.netflix.concurrency.limits.test;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
 
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractConcurrencyLimitsTests {
+
+	protected WebClient client;
 
 	protected void assertLimiter(WebClient client) {
 		// TODO: assert the body
@@ -59,5 +65,15 @@ public class AbstractConcurrencyLimitsTests {
 		assertThat(responses.other).hasValue(0);
 		assertThat(responses.tooManyReqs).hasValueGreaterThanOrEqualTo(1);
 
+	}
+
+	@Configuration
+	@RestController
+	protected static class HelloControllerConfiguration {
+
+		@GetMapping
+		public String get() {
+			return "Hello";
+		}
 	}
 }
