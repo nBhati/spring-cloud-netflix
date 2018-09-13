@@ -19,7 +19,7 @@ package org.springframework.cloud.netflix.concurrency.limits.reactive;
 
 import java.util.function.Consumer;
 
-import com.netflix.concurrency.limits.limit.SettableLimit;
+import com.netflix.concurrency.limits.limit.FixedLimit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,7 +68,7 @@ public class ConcurrencyLimitsWebFilterTests extends AbstractConcurrencyLimitsTe
 		@Bean
 		public Consumer<ServerWebExchangeLimiterBuilder> limiterBuilderConfigurer() {
 			return limiterBuilder -> limiterBuilder
-					.limiter(builder -> builder.limit(SettableLimit.startingAt(1)));
+					.limit(FixedLimit.of(1));
 		}
 	}
 

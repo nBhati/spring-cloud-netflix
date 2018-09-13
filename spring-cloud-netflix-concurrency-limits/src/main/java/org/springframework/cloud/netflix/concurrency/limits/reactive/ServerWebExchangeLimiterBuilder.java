@@ -19,26 +19,19 @@ package org.springframework.cloud.netflix.concurrency.limits.reactive;
 
 import java.security.Principal;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.netflix.concurrency.limits.Limiter;
-import com.netflix.concurrency.limits.limiter.AbstractLimiterBuilder;
-import com.netflix.concurrency.limits.strategy.LookupPartitionStrategy;
+import com.netflix.concurrency.limits.limiter.AbstractPartitionedLimiter;
 
 import org.springframework.web.server.ServerWebExchange;
 
-public class ServerWebExchangeLimiterBuilder extends AbstractLimiterBuilder<ServerWebExchangeLimiterBuilder, ServerWebExchange> {
+public class ServerWebExchangeLimiterBuilder extends AbstractPartitionedLimiter.Builder<ServerWebExchangeLimiterBuilder, ServerWebExchange> {
 	/**
 	 * Partition the limit by header
-	 * @param configurer Configuration function though which header percentages may be specified
-	 *                   Unspecified header values may only use excess capacity.
 	 * @return Chainable builder
 	 */
-	public ServerWebExchangeLimiterBuilder partitionByHeader(String name, Consumer<LookupPartitionStrategy.Builder<ServerWebExchange>> configurer) {
-		return partitionByLookup(
-				exchange -> exchange.getRequest().getHeaders().getFirst(name),
-				configurer);
+	public ServerWebExchangeLimiterBuilder partitionByHeader(String name) {
+		return partitionResolver(exchange -> exchange.getRequest().getHeaders().getFirst(name));
 	}
 
 	/**
@@ -50,51 +43,40 @@ public class ServerWebExchangeLimiterBuilder extends AbstractLimiterBuilder<Serv
 	 * @return Chainable builder
 	 */
 	/*public ServerWebExchangeLimiterBuilder partitionByUserPrincipal(Function<Principal, String> principalToGroup, Consumer<LookupPartitionStrategy.Builder<ServerWebExchange>> configurer) {
-		return partitionByLookup(
+		return partitionResolver(
 				exchange -> Optional.ofNullable(request.getUserPrincipal()).map(principalToGroup).orElse(null),
 				configurer);
 	}*/
 
 	/**
 	 * Partition the limit by request attribute
-	 * @param configurer Configuration function though which attribute percentages may be specified
-	 *                   Unspecified attribute values may only use excess capacity.
 	 * @return Chainable builder
 	 */
-	public ServerWebExchangeLimiterBuilder partitionByAttribute(String name, Consumer<LookupPartitionStrategy.Builder<ServerWebExchange>> configurer) {
-		return partitionByLookup(
-				exchange -> exchange.getAttribute(name),
-				configurer);
+	public ServerWebExchangeLimiterBuilder partitionByAttribute(String name) {
+		return partitionResolver( exchange -> exchange.getAttribute(name));
 	}
 
 	/**
 	 * Partition the limit by request parameter
-	 * @param configurer Configuration function though which parameter value percentages may be specified
-	 *                   Unspecified parameter values may only use excess capacity.
 	 * @return Chainable builder
 	 */
-	public ServerWebExchangeLimiterBuilder partitionByParameter(String name, Consumer<LookupPartitionStrategy.Builder<ServerWebExchange>> configurer) {
-		return partitionByLookup(
-				exchange -> exchange.getRequest().getQueryParams().getFirst(name),
-				configurer);
+	public ServerWebExchangeLimiterBuilder partitionByParameter(String name) {
+		return partitionResolver(exchange -> exchange.getRequest().getQueryParams().getFirst(name));
 	}
 
 	/**
 	 * Partition the limit by the full path. Percentages of the limit are partitioned to named
 	 * groups.  Group membership is derived from the provided mapping function.
 	 * @param pathToGroup Mapping function from full path to a named group.
-	 * @param configurer Configuration function though which group percentages may be specified
-	 *                   Unspecified group values may only use excess capacity.
 	 * @return Chainable builder
 	 */
-	public ServerWebExchangeLimiterBuilder partitionByPathInfo(Function<String, String> pathToGroup, Consumer<LookupPartitionStrategy.Builder<ServerWebExchange>> configurer) {
-		return partitionByLookup(
+	public ServerWebExchangeLimiterBuilder partitionByPathInfo(Function<String, String> pathToGroup) {
+		return partitionResolver(
 				exchange -> {
 					//TODO: pathWithinApplication?
 					String path = exchange.getRequest().getPath().contextPath().value();
 					return Optional.ofNullable(path).map(pathToGroup).orElse(null);
-				},
-				configurer);
+				});
 	}
 
 	@Override
@@ -102,7 +84,4 @@ public class ServerWebExchangeLimiterBuilder extends AbstractLimiterBuilder<Serv
 		return this;
 	}
 
-	public Limiter<ServerWebExchange> build() {
-		return buildLimiter();
-	}
 }

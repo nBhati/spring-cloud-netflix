@@ -36,8 +36,8 @@ public class AbstractConcurrencyLimitsTests {
 
 	protected void assertLimiter(WebClient client) {
 		// TODO: assert the body
-		Flux<Tuple2<String, HttpStatus>> flux = Flux.range(1, 10)
-				.flatMap(integer -> client.get().uri("/").exchange(), 2)
+		Flux<Tuple2<String, HttpStatus>> flux = Flux.range(1, 100)
+				.flatMap(integer -> client.get().uri("/").exchange(), 4)
 				// .log("reqs", Level.INFO)
 				.flatMap(response -> response.bodyToMono(String.class)
 						.defaultIfEmpty("")
